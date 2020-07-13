@@ -65,21 +65,6 @@ namespace Model.HtmlScratchDataModel.Tests
         }
 
         [Theory()]
-        [InlineData("qeq", "q", "R", "L")]
-        public void SamePatternReplacementTest_ShouldPass(string input, string pattern, string markupLeft,
-            string markupRight)
-        {
-            var output = input.SamePatternReplacement(pattern, markupLeft, markupRight);
-        }
-        [Theory()]
-        [InlineData("qeq", "q", "R", "L")]
-        public void SamePatternReplacementTest_ShouldFail_WithWrongMarkupException(string input, string pattern, string markupLeft,
-            string markupRight)
-        {
-
-        }
-
-        [Theory()]
         [InlineData("{qeq|asd}zxc")]
         [InlineData("{Typ|Tytuł}Tekst")]
         public void WholeLineMarkupTest_ShouldPass(string input)
@@ -120,13 +105,29 @@ namespace Model.HtmlScratchDataModel.Tests
         [InlineData("qwe")]
         [InlineData("#QWE")]
         [InlineData("<<qwe>> *asd* ** dd * asd * dsa**")]
-        public void ReplaceMarkupsTest(string input)
+        public void ReplaceMarkupsTest_ShouldPass(string input)
         {
             var output = input.ReplaceMarkups();
             _testOutputHelper.WriteLine($"Input:\n{input}");
             _testOutputHelper.WriteLine($"Output:\n{output}");
 
             Assert.True(input != output);
+        }
+
+        [Theory()]
+        [InlineData("*qqq*  asd*fff*", '*', "<em>", "</em>")]
+        public void SamePatternReplacementTest_ShouldPass(string input,
+            char pattern,
+            string leftMarkup,
+            string rightMarkup)
+        {
+            var output = input.SamePatternReplacement(pattern, leftMarkup, rightMarkup);
+            _testOutputHelper.WriteLine($"Input:\n{input}");
+            _testOutputHelper.WriteLine($"Output:\n{output}");
+
+            Assert.True(input != output);
+            Assert.Contains(leftMarkup, output);
+            Assert.Contains(rightMarkup, output);
         }
     }
 }

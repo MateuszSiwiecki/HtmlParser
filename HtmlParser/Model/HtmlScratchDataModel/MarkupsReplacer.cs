@@ -13,7 +13,7 @@ namespace Model.HtmlScratchDataModel
                 .TwoPatternsReplacer("_!", "!_", "<ins>", "</ins>")
                 .TwoPatternsReplacer("-!", "!-", "<del>", "</del>")
                 .SamePatternReplacement("**", "<strong>", "</strong>")
-                .SamePatternReplacement("*", "<em>", "</em>")
+                .SamePatternReplacement('*', "<em>", "</em>")
                 .HashMarkup()
                 .WholeLineMarkup();
 
@@ -56,23 +56,37 @@ namespace Model.HtmlScratchDataModel
         {
             if (!input.Contains(pattern)) return input;
             var slice2 = input.Slice2();
-            var pairsWhere = slice2.Where(x => x == pattern || x.Contains(pattern));
+            var pairsWhere = slice2.Where(x => x == pattern);
             var indexes = pairsWhere.Select(x => input.IndexOf(x));
             var tableOfIndexes = indexes.ToArray();
             if (tableOfIndexes.Length % 2 != 0) throw new WrongMarkupException();
 
-            for (var i = tableOfIndexes.Length; i > tableOfIndexes.Length / 2; i--)
-                input = input
-                    .Remove(tableOfIndexes[i], 2)
-                    .Insert(tableOfIndexes[i], markupRight);
+            var leftMarkupsString = input.Substring(0, tableOfIndexes[tableOfIndexes.Length / 2]);
+            var rightMarkupsString = input.Substring(tableOfIndexes[tableOfIndexes.Length / 2]);
 
-            for (var i = 0; i < tableOfIndexes.Length / 2; i++)
-                input = input
-                    .Remove(tableOfIndexes[i], 2)
-                    .Insert(tableOfIndexes[i], markupLeft);
+            leftMarkupsString = leftMarkupsString.Replace(pattern, markupLeft);
+            rightMarkupsString = rightMarkupsString.Replace(pattern, markupRight);
 
 
-            return input;
+            return leftMarkupsString + rightMarkupsString;
+        }
+        public static string SamePatternReplacement(this string input, char pattern, string markupLeft,
+            string markupRight)
+        {
+            if (!input.Contains(pattern)) return input;
+            var pairsWhere = input.Where(x => x == pattern);
+            var indexes = pairsWhere.Select(x => input.IndexOf(x));
+            var tableOfIndexes = indexes.ToArray();
+            if (tableOfIndexes.Length % 2 != 0) throw new WrongMarkupException();
+
+            var leftMarkupsString = input.Substring(0, tableOfIndexes[tableOfIndexes.Length / 2]);
+            var rightMarkupsString = input.Substring(tableOfIndexes[tableOfIndexes.Length / 2]);
+
+            leftMarkupsString = leftMarkupsString.Replace(pattern.ToString(), markupLeft);
+            rightMarkupsString = rightMarkupsString.Replace(pattern.ToString(), markupRight);
+
+
+            return leftMarkupsString + rightMarkupsString;
         }
 
         public static string HashMarkup(this string input)
