@@ -6,14 +6,16 @@ namespace Model.HtmlScratchDataModel
     public static class MarkupsReplacer
     {
         private static int hIndex = 1;
-        public static string ReplaceMarkups(string input)
+        public static string ReplaceMarkups(this string input)
             => input
                 .NewLineMarkup()
                 .TwoPatternsReplacer(">>", "<<", "<q>", "</q>")
                 .TwoPatternsReplacer("_!", "!_", "<ins>", "</ins>")
                 .TwoPatternsReplacer("-!", "!-", "<del>", "</del>")
                 .SamePatternReplacement("**", "<strong>", "</strong>")
-                .SamePatternReplacement("*", "<em>", "</em>");
+                .SamePatternReplacement("*", "<em>", "</em>")
+                .HashMarkup()
+                .WholeLineMarkup();
 
         public static string NewLineMarkup(this string input)
         {
@@ -38,8 +40,7 @@ namespace Model.HtmlScratchDataModel
         {
             //markup correction check
             if (leftPattern == rightPattern) throw new ArgumentException("Patterns can't be the same!");
-            if (leftMarkup == rightPattern)
-                throw new ArgumentException("Left markup and right pattern can't be the same!");
+            if (leftMarkup == rightPattern) throw new ArgumentException("Left markup and right pattern can't be the same!");
 
             var leftMarkupElementsCheck = input.Slice2().Where(x => x == leftPattern).ToArray();
             var rightMarkupElementsCheck = input.Slice2().Where(x => x == rightPattern).ToArray();
@@ -53,20 +54,23 @@ namespace Model.HtmlScratchDataModel
         public static string SamePatternReplacement(this string input, string pattern, string markupLeft,
             string markupRight)
         {
-            var tableOfIndexes = input.Slice2().Where(x => x.Contains(pattern)).Select(x => input.IndexOf(x)).ToArray();
+            if (!input.Contains(pattern)) return input;
+            var slice2 = input.Slice2();
+            var pairsWhere = slice2.Where(x => x == pattern || x.Contains(pattern));
+            var indexes = pairsWhere.Select(x => input.IndexOf(x));
+            var tableOfIndexes = indexes.ToArray();
             if (tableOfIndexes.Length % 2 != 0) throw new WrongMarkupException();
 
-            for (var i = 0; i < tableOfIndexes.Length / 2; i++)
-            {
-                input = input.Remove(tableOfIndexes[i], 2);
-                input = input.Insert(tableOfIndexes[i], markupLeft);
-            }
-
             for (var i = tableOfIndexes.Length; i > tableOfIndexes.Length / 2; i--)
-            {
-                input = input.Remove(tableOfIndexes[i], 2);
-                input = input.Insert(tableOfIndexes[i], markupRight);
-            }
+                input = input
+                    .Remove(tableOfIndexes[i], 2)
+                    .Insert(tableOfIndexes[i], markupRight);
+
+            for (var i = 0; i < tableOfIndexes.Length / 2; i++)
+                input = input
+                    .Remove(tableOfIndexes[i], 2)
+                    .Insert(tableOfIndexes[i], markupLeft);
+
 
             return input;
         }
@@ -76,7 +80,7 @@ namespace Model.HtmlScratchDataModel
 
         public static string WholeLineMarkup(this string input)
         {
-            if(input.First() != '{') throw new WrongMarkupException();
+            if (input.First() != '{') return input;
             var LBCount = input.Count(x => x == '{');
             var RBCout = input.Count(x => x == '}');
             var VBCount = input.Count(x => x == '|');

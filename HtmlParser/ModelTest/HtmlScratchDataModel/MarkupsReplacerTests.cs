@@ -2,6 +2,7 @@
 using Model.HtmlScratchDataModel;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using Xunit.Abstractions;
 
@@ -101,6 +102,31 @@ namespace Model.HtmlScratchDataModel.Tests
             _testOutputHelper.WriteLine($"Index: {_headerIndex}");
             Assert.Contains($"<h{_headerIndex++} id=", output);
             Assert.DoesNotContain($"#", output);
+        }
+
+        [Theory()]
+        [InlineData("qwe")]
+        [InlineData("ewq")]
+        [InlineData("asdzxc")]
+        public void NewLineMarkupTest_ShouldPass_ShouldReturnNormalLineMarkup(string input)
+        {
+            var output = input.NewLineMarkup();
+            _testOutputHelper.WriteLine(output);
+            Assert.Contains("<p>", output);
+            Assert.Contains("</p>", output);
+        }
+
+        [Theory()]
+        [InlineData("qwe")]
+        [InlineData("#QWE")]
+        [InlineData("<<qwe>> *asd* ** dd * asd * dsa**")]
+        public void ReplaceMarkupsTest(string input)
+        {
+            var output = input.ReplaceMarkups();
+            _testOutputHelper.WriteLine($"Input:\n{input}");
+            _testOutputHelper.WriteLine($"Output:\n{output}");
+
+            Assert.True(input != output);
         }
     }
 }
