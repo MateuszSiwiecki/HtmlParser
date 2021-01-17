@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Model.HtmlScratchDataModel
@@ -74,19 +76,24 @@ namespace Model.HtmlScratchDataModel
             string markupRight)
         {
             if (!input.Contains(pattern)) return input;
-            var pairsWhere = input.Where(x => x == pattern);
-            var indexes = pairsWhere.Select(x => input.IndexOf(x));
-            var tableOfIndexes = indexes.ToArray();
-            if (tableOfIndexes.Length % 2 != 0) throw new WrongMarkupException();
+            var inputLeft = new Queue<string>();
+            var inputRight = new Queue<string>();
+            var output = "";
+            do
+            {
+                inputLeft.Enqueue(input.Substring(0, input.IndexOf(pattern) + 1));
+                input = input.Substring(input.IndexOf(pattern) + 1);
+                inputRight.Enqueue(input.Substring(0, input.IndexOf(pattern) + 1));
+                input = input.Substring(input.IndexOf(pattern) + 1);
+            } while (input.Contains(pattern));
 
-            var leftMarkupsString = input.Substring(0, tableOfIndexes[tableOfIndexes.Length / 2]);
-            var rightMarkupsString = input.Substring(tableOfIndexes[tableOfIndexes.Length / 2]);
+            do
+            {
+                output += inputLeft.Dequeue().Replace(pattern.ToString(), markupLeft);
+                output += inputRight.Dequeue().Replace(pattern.ToString(), markupRight);
+            } while (inputLeft.Count > 0);
 
-            leftMarkupsString = leftMarkupsString.Replace(pattern.ToString(), markupLeft);
-            rightMarkupsString = rightMarkupsString.Replace(pattern.ToString(), markupRight);
-
-
-            return leftMarkupsString + rightMarkupsString;
+            return output + input;
         }
 
         public static string HashMarkup(this string input)
